@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Put, Delete, Req, Request, Param, Body, Res, HttpException,
-    HttpStatus} from '@nestjs/common';
+    HttpStatus, ParseIntPipe } from '@nestjs/common';
 import { CreateBookDto } from './dto';
 import {BooksService} from './books.service';
+import { ValidationPipe } from './pipes'
 
 @Controller('books')
 export class BooksController {
@@ -18,10 +19,9 @@ export class BooksController {
     }
 
     @Get(':name')
-    async getByName(@Param('name') name: string, @Res() res): Promise<CreateBookDto> {
-        console.log('Name >> ', name);
+    async getByName(@Param('name', ValidationPipe) name: string, @Res() res): Promise<CreateBookDto> {
         const book = await this.bookService.getBookByName(name);
-        console.log('book by name', book);
+
         return res.status(200).send({
             message: 'Success!',
             book
@@ -48,10 +48,8 @@ export class BooksController {
     }
 
     @Delete(':id')
-    async deleteById(@Param('id') id: string, @Res() res): Promise<{}> {
-        console.log('id >>', id);
-        const books = await this.bookService.deleteBookById(+id);
-        console.log('books', books);
+    async deleteById(@Param('id', new ParseIntPipe({errorHttpStatusCode: HttpStatus.NOT_ACCEPTABLE})) id: number, @Res() res): Promise<{}> {
+        const books = await this.bookService.deleteBookById(id);
 
         return res.status(200).send({
             message: 'Success!',
