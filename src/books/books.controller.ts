@@ -1,22 +1,39 @@
-import { Controller, Get, Post, Put, Delete, Req, Request, Param, Body, Res, HttpException,
-    HttpStatus, ParseIntPipe } from '@nestjs/common';
-import { CreateBookDto } from './dto';
+import {
+    BadRequestException,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpStatus,
+    Param,
+    ParseIntPipe,
+    Post,
+    Put,
+    Req,
+    Request,
+    Res,
+    UseFilters
+} from '@nestjs/common';
+import {CreateBookDto} from './dto';
 import {BooksService} from './books.service';
-import { ValidationPipe } from './pipes'
+import {HttpExceptionFilter} from './http-exception.filter';
+import {ValidationPipe} from './pipes';
 
 @Controller('books')
 export class BooksController {
-    constructor(
-        private bookService: BooksService,
-    ) {}
+  constructor(private bookService: BooksService) {}
 
-    @Get()
-    async getAll(@Req() request: Request): Promise<CreateBookDto[]> {
-        throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
-        const books = await this.bookService.getAllBooks();
-        console.log('books ', books);
-        return books;
+  @Get()
+  @UseFilters(HttpExceptionFilter)
+  async getAll(@Req() request: Request): Promise<CreateBookDto[]> {
+    try {
+      const books = await this.bookService.getAllBooks();
+
+      return books;
+    } catch (e) {
+      throw new BadRequestException();
     }
+  }
 
     @Get(':name')
     async getByName(@Param('name', ValidationPipe) name: string, @Res() res): Promise<CreateBookDto> {
@@ -24,23 +41,19 @@ export class BooksController {
 
         return res.status(200).send({
             message: 'Success!',
-            book
+            book,
         });
     }
 
     @Post()
     async addNewBook(@Body() bookData: CreateBookDto): Promise<CreateBookDto[]> {
-        console.log('bookData ', bookData);
-        const books = await this.bookService.addNewBook(bookData);
-        console.log('books added new one', books);
-        return books;
+        return this.bookService.addNewBook(bookData);
     }
 
     @Put()
     async updateBook(@Body() bookData: CreateBookDto, @Res() res): Promise<any> {
-        console.log('bookData', bookData);
         const book = await this.bookService.updateBookById(bookData);
-        console.log('book', book);
+
         return res.status(200).send({
             message: 'Success',
             book
