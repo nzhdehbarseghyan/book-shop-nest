@@ -12,14 +12,17 @@ import {
     Req,
     Request,
     Res,
-    UseFilters
+    UseFilters,
+    UseGuards,
 } from '@nestjs/common';
 import {CreateBookDto} from './dto';
 import {BooksService} from './books.service';
 import {HttpExceptionFilter} from './http-exception.filter';
 import {ValidationPipe} from './pipes';
+import { AuthGuard } from "./guards";
 
 @Controller('books')
+@UseGuards(AuthGuard)
 export class BooksController {
   constructor(private bookService: BooksService) {}
 
